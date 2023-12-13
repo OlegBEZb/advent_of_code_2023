@@ -35,46 +35,26 @@ if curr:
     patterns.append(curr)
 
 
-def find_right_borders(pattern):
-    res = []
-    prev_line = pattern[0]
-    for i, line in enumerate(pattern[1:], 1):
-        if (line == prev_line).all():
-            res.append(i)
-        prev_line = line
-    return res
+def check_pattern(pattern, smudge=False):
+    # in assumption that the simmetry touches the border and this simmetry is unique
+    for i in range(1, len(pattern)):
+        ln = min(i, len(pattern) - i)
+        if smudge:
+            if np.sum(pattern[i-ln:i] != pattern[i:i+ln][::-1]) == 1:
+                return i
+        else:
+            if (pattern[i-ln:i] == pattern[i:i+ln][::-1]).all():
+                return i
+    return 0
 
-def count_reflected(pattern, right_border):
-    if not right_border:
-        return 0
-    
-    res = right_border
-
-    left_border = right_border - 1
-    while (left_border > 0) and (right_border < len(pattern) - 1):
-        right_border += 1
-        left_border -= 1
-        if (pattern[right_border] != pattern[left_border]).any():
-            return 0
-
-    return res
-
-def process_pattern(pattern):
-    right_borders = find_right_borders(pattern)
-    if right_borders:
-        for right_border in right_borders:
-            reflections = count_reflected(pattern, right_border)
-            if reflections:
-                return reflections
-        return reflections
-    else:
-        return 0
 
 total = 0
 for pattern in patterns:
     pattern = np.array([list(line) for line in pattern])
-    horizontal = process_pattern(pattern)
-    vertical = process_pattern(pattern.T)
+
+    horizontal = check_pattern(pattern, smudge=True)
+    vertical = check_pattern(pattern.T, smudge=True)
+
     res = 100*horizontal + vertical
     total += res   
 
